@@ -7,6 +7,7 @@ import {
     Loader2, Zap, ShieldCheck, Cpu, Fingerprint, Activity, ScanFace, Command
 } from 'lucide-react';
 import { getAnimeCatalog, getTrendingAnime, getNewReleases } from '../services/contentService';
+import { addToWatchlist, removeFromWatchlist } from '../services/userService';
 import { Anime, ViewState, User, WatchOrderItem, ContentType } from '../types';
 import VideoPlayer from '../components/VideoPlayer';
 import AIAssistant from '../components/AIAssistant';
@@ -471,7 +472,7 @@ const HomeView = ({
     </div>
 );
 
-const DetailView = ({ selectedAnime, handlePlayClick, onBack }: any) => {
+const DetailView = ({ selectedAnime, handlePlayClick, onBack, onWatchlistToggle, isAdded }: any) => {
     if (!selectedAnime) return null;
     return (
         <div className="min-h-screen bg-[#020202] animate-fade-in pb-20 relative">
@@ -523,9 +524,12 @@ const DetailView = ({ selectedAnime, handlePlayClick, onBack }: any) => {
                                     <span className="skew-x-[5deg]">PLAY EPISODE 1</span>
                                 </button>
                             )}
-                            <button className="glass-panel text-white px-8 py-5 rounded-sm font-bold transition-all hover:bg-white/10 hover:border-brand-green flex items-center gap-3 skew-x-[-5deg]">
+                            <button
+                                onClick={onWatchlistToggle}
+                                className={`glass-panel text-white px-8 py-5 rounded-sm font-bold transition-all hover:bg-white/10 flex items-center gap-3 skew-x-[-5deg] ${isAdded ? 'border border-brand-green text-brand-green' : 'hover:border-brand-green'}`}
+                            >
                                 <Layers size={24} className="skew-x-[5deg]" />
-                                <span className="skew-x-[5deg]">ADD TO LIST</span>
+                                <span className="skew-x-[5deg]">{isAdded ? 'IN LIBRARY' : 'ADD TO LIST'}</span>
                             </button>
                         </div>
 
@@ -602,12 +606,28 @@ const Dashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
-    const { userData: user, logout } = useAuth();
+    const { userData: user, logout, refreshUserProfile } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         await logout();
         // UI updates automatically
+    };
+
+    const handleWatchlistToggle = async () => {
+        if (!user || user.isGuest) {
+            navigate('/login');
+            return;
+        }
+        if (!selectedAnime) return;
+
+        const isAdded = user.watchlist?.includes(selectedAnime.id);
+        if (isAdded) {
+            await removeFromWatchlist(user.id, selectedAnime.id);
+        } else {
+            await addToWatchlist(user.id, selectedAnime.id);
+        }
+        await refreshUserProfile();
     };
 
     useEffect(() => {
@@ -717,6 +737,8 @@ const Dashboard = () => {
                             selectedAnime={selectedAnime}
                             handlePlayClick={handlePlayClick}
                             onBack={() => setView('HOME')}
+                            onWatchlistToggle={handleWatchlistToggle}
+                            isAdded={user?.watchlist?.includes(selectedAnime?.id || '')}
                         />
                     )}
                 </main>

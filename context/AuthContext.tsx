@@ -20,6 +20,7 @@ interface AuthContextType {
   loginGuest: () => Promise<any>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,6 +136,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return signOut(auth);
   };
 
+  const refreshUserProfile = async () => {
+    if (!auth.currentUser) return;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        setUserData(userDoc.data() as User);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user profile:", error);
+    }
+  };
+
   const value = {
     user,
     userData,
@@ -143,7 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     loginGuest,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    refreshUserProfile
   };
 
   return (
