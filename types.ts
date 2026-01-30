@@ -26,7 +26,7 @@ export interface Anime {
   rating: number; // 0-10
   genres: string[];
   year: number;
-  status: 'Ongoing' | 'Completed';
+  status: 'Ongoing' | 'Completed' | 'Upcoming';
   type: 'TV' | 'Movie' | 'OVA' | 'ONA'; // New field for card badge
   quality: 'HD' | 'FHD' | '4K'; // New field for card badge
   totalEpisodes?: number; // New field

@@ -57,10 +57,11 @@ export const getTrendingAnime = async (limitCount = 5): Promise<Anime[]> => {
             limit(limitCount)
         );
         const snapshot = await getDocs(q);
+        if (snapshot.empty) return MOCK_ANIME_CATALOG.slice(0, limitCount);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Anime));
     } catch (error) {
         console.error('Error fetching trending:', error);
-        return [];
+        return MOCK_ANIME_CATALOG.slice(0, limitCount);
     }
 };
 
@@ -72,10 +73,11 @@ export const getNewReleases = async (limitCount = 5): Promise<Anime[]> => {
             limit(limitCount)
         );
         const snapshot = await getDocs(q);
+        if (snapshot.empty) return [...MOCK_ANIME_CATALOG].sort((a, b) => b.year - a.year).slice(0, limitCount);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Anime));
     } catch (error) {
         console.error('Error fetching new releases:', error);
-        return [];
+        return [...MOCK_ANIME_CATALOG].sort((a, b) => b.year - a.year).slice(0, limitCount);
     }
 };
 

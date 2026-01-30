@@ -240,11 +240,11 @@ const AnimeCard: React.FC<{ anime: Anime; onClick: (a: Anime) => void }> = ({ an
         onClick={() => onClick(anime)}
         className="group cursor-pointer relative perspective-container w-full"
     >
-        <div className="card-3d relative aspect-[3/4] rounded-xl overflow-hidden mb-5 bg-[#111] border border-white/5 group-hover:border-brand-green/50">
+        <div className="card-3d relative aspect-[2/3] rounded-xl overflow-hidden mb-5 bg-[#111] border border-white/5 group-hover:border-brand-green/50">
             <img
                 src={anime.coverImage}
                 alt={anime.title}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
+                className="w-full h-full object-cover transition-transform duration-700 ease-out opacity-100"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
             <div className="absolute inset-0 bg-brand-green/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-overlay"></div>
@@ -308,7 +308,7 @@ const HeroCarousel = ({ items, currentIndex, setCurrentIndex, handleAnimeClick }
                     key={item.id}
                     src={item.bannerImage}
                     alt={item.title}
-                    className="w-full h-full object-cover opacity-60"
+                    className="w-full h-full object-cover object-center opacity-80 transition-all duration-[20s] ease-linear transform scale-100 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#020202] via-[#020202]/60 to-transparent" />
@@ -383,6 +383,7 @@ const HeroCarousel = ({ items, currentIndex, setCurrentIndex, handleAnimeClick }
 const HomeView = ({
     trending,
     newReleases,
+    mages,
     topAiring,
     currentHeroIndex,
     setCurrentHeroIndex,
@@ -409,6 +410,22 @@ const HomeView = ({
                 </div>
                 <div className="flex gap-8 overflow-x-auto pb-12 no-scrollbar snap-x perspective-container pl-4">
                     {trending.map((anime: Anime) => (
+                        <div key={anime.id} className="min-w-[220px] md:min-w-[260px] snap-start">
+                            <AnimeCard anime={anime} onClick={handleAnimeClick} />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section>
+                <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-2 h-10 bg-brand-green skew-x-[-10deg] shadow-neon-green"></div>
+                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter italic">MAGES & <span className="text-brand-green">MAGIC</span></h2>
+                    </div>
+                </div>
+                <div className="flex gap-8 overflow-x-auto pb-12 no-scrollbar snap-x perspective-container pl-4">
+                    {mages.map((anime: Anime) => (
                         <div key={anime.id} className="min-w-[220px] md:min-w-[260px] snap-start">
                             <AnimeCard anime={anime} onClick={handleAnimeClick} />
                         </div>
@@ -483,6 +500,7 @@ const Dashboard = () => {
     const [catalog, setCatalog] = useState<Anime[]>([]);
     const [trending, setTrending] = useState<Anime[]>([]);
     const [newReleases, setNewReleases] = useState<Anime[]>([]);
+    const [mages, setMages] = useState<Anime[]>([]);
     const [isLoadingContent, setIsLoadingContent] = useState(true);
 
     const [searchResults, setSearchResults] = useState<Anime[]>([]);
@@ -520,12 +538,13 @@ const Dashboard = () => {
             try {
                 const [catalogData, trendingData, newData] = await Promise.all([
                     getAnimeCatalog(),
-                    getTrendingAnime(),
-                    getNewReleases()
+                    getTrendingAnime(10),
+                    getNewReleases(12)
                 ]);
                 setCatalog(catalogData);
                 setTrending(trendingData);
                 setNewReleases(newData);
+                setMages(catalogData.filter(a => a.genres.includes('Fantasy') || a.description.toLowerCase().includes('mage')));
             } catch (error) {
                 console.error("Failed to load content:", error);
             } finally {
@@ -610,6 +629,7 @@ const Dashboard = () => {
                         <HomeView
                             trending={trending}
                             newReleases={newReleases}
+                            mages={mages}
                             topAiring={catalog} // Using full catalog as top airing fallback for now
                             currentHeroIndex={currentHeroIndex}
                             setCurrentHeroIndex={setCurrentHeroIndex}
