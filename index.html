@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ANIMAX - Future of Anime</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'sans-serif'],
+              mono: ['Rajdhani', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                green: '#00ffa3', // Neon Green
+                orange: '#ff8800', // Warm Orange
+                dark: '#050505',
+                glass: 'rgba(20, 20, 20, 0.7)',
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'spin-slow': 'spin 12s linear infinite',
+              'spin-medium': 'spin 8s linear infinite',
+              'spin-fast': 'spin 3s linear infinite',
+              'spin-reverse': 'spinReverse 15s linear infinite',
+              'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+              'particle-rise': 'particleRise 15s linear infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              spinReverse: {
+                from: { transform: 'rotate(360deg)' },
+                to: { transform: 'rotate(0deg)' },
+              },
+              pulseGlow: {
+                '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+                '50%': { opacity: '0.8', transform: 'scale(1.1)' },
+              },
+              particleRise: {
+                '0%': { transform: 'translateY(120vh) translateX(0)', opacity: '0' },
+                '50%': { opacity: '0.5' },
+                '100%': { transform: 'translateY(-20vh) translateX(20px)', opacity: '0' },
+              }
+            },
+            boxShadow: {
+              'neon-green': '0 0 20px rgba(0, 255, 163, 0.4)',
+              'neon-orange': '0 0 20px rgba(255, 136, 0, 0.4)',
+              '3d-float': '0 30px 60px -12px rgba(0, 0, 0, 0.9)',
+              'inner-light': 'inset 0 1px 0 rgba(255,255,255,0.1)',
+            },
+            backgroundImage: {
+              'lux-gradient': 'radial-gradient(circle at 50% 0%, rgba(0, 255, 163, 0.08) 0%, transparent 60%), radial-gradient(circle at 100% 100%, rgba(255, 136, 0, 0.05) 0%, transparent 50%)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #000;
+        color: #e2e8f0;
+        font-family: 'Outfit', sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #050505; }
+      ::-webkit-scrollbar-thumb { 
+        background: linear-gradient(to bottom, #00ffa3, #008f5b); 
+        border-radius: 3px; 
+      }
+
+      /* 3D Utilities */
+      .perspective-container { perspective: 1000px; }
+      .preserve-3d { transform-style: preserve-3d; }
+      
+      .card-3d {
+        transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transform-style: preserve-3d;
+      }
+      .card-content { transform: translateZ(30px); }
+
+      /* Deep Luxury Glass */
+      .glass-luxury {
+        background: rgba(8, 8, 8, 0.65);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 
+          0 0 0 1px rgba(0,0,0, 0.5), 
+          0 25px 50px -12px rgba(0,0,0, 0.9),
+          inset 0 0 60px rgba(0,0,0, 0.5);
+      }
+      
+      .glass-panel {
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* --- NEURAL HALO SYSTEM --- */
+      .halo-wrapper {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        transform-style: preserve-3d;
+      }
+      
+      .halo-core {
+        position: absolute;
+        inset: 30px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #00ffa3, #005f3d, #000);
+        filter: blur(10px);
+        mix-blend-mode: screen;
+        opacity: 0.8;
+        transition: all 0.6s ease;
+      }
+
+      .halo-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border-style: solid;
+        border-color: transparent;
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* Ring Specifics */
+      .ring-orbital {
+        border-width: 1px;
+        border-top-color: rgba(0, 255, 163, 0.6);
+        border-bottom-color: rgba(0, 255, 163, 0.1);
+        transform: rotateX(65deg) rotateY(15deg);
+      }
+      
+      .ring-signal {
+        inset: 10px;
+        border-width: 2px;
+        border-left-color: rgba(255, 136, 0, 0.5);
+        border-right-color: rgba(255, 136, 0, 0.1);
+        transform: rotateX(-25deg) rotateY(45deg);
+      }
+
+      .ring-data {
+        inset: 20px;
+        border-width: 1px;
+        border-style: dashed;
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: rotateZ(0deg);
+      }
+
+      /* Halo States */
+      .halo-focused .halo-core {
+        filter: blur(5px) brightness(1.3);
+        transform: scale(1.1);
+        background: radial-gradient(circle at 35% 35%, #ccffeb, #00ffa3, #000);
+      }
+      .halo-focused .ring-orbital {
+        border-top-color: #00ffa3;
+        transform: rotateX(65deg) rotateY(180deg); /* Spin effect via transition */
+        animation: spin-fast 2s linear infinite;
+      }
+      .halo-focused .ring-signal {
+        border-left-color: #ff8800;
+        animation: spin-reverse 3s linear infinite;
+      }
+
+      .halo-success .halo-core {
+        background: #fff;
+        filter: blur(20px) brightness(2);
+        transform: scale(1.5);
+        opacity: 0; /* Fade out implies consumption of energy */
+      }
+
+      /* Input Styles */
+      .input-phantom {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+      .input-phantom:focus {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom-color: #00ffa3;
+        box-shadow: 0 10px 30px -10px rgba(0, 255, 163, 0.1);
+      }
+      .input-phantom::placeholder {
+        color: rgba(255, 255, 255, 0.2);
+        letter-spacing: 0.1em;
+      }
+
+      .text-3d-logo { text-shadow: 0 0 20px rgba(0,255,163,0.4); }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-black bg-lux-gradient min-h-screen">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
