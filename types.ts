@@ -43,6 +43,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
+  role: 'user' | 'admin' | 'guest';
   isGuest: boolean;
   watchlist: string[];
   history: string[];

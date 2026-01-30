@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               name: 'Guest User',
               email: 'guest@animax.local',
               avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + firebaseUser.uid,
+              role: 'guest',
               isGuest: true,
               watchlist: [],
               history: []
@@ -69,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 name: firebaseUser.displayName || 'Unknown User',
                 email: firebaseUser.email || '',
                 avatar: firebaseUser.photoURL || '',
+                role: 'user',
                 isGuest: false,
                 watchlist: [],
                 history: []
@@ -100,7 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isGuest: false,
       watchlist: [],
       history: [],
-      ...additionalData
+      ...additionalData,
+      role: additionalData.role || 'user'
     };
 
     // Create user document in Firestore
