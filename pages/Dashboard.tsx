@@ -6,7 +6,7 @@ import {
     Menu, Home, Tv, Film, Layers, Calendar, Disc, Mic, ChevronRight, ChevronLeft,
     Loader2, Zap, ShieldCheck, Cpu, Fingerprint, Activity, ScanFace, Command
 } from 'lucide-react';
-import { MOCK_ANIME_CATALOG } from '../constants';
+import { getAnimeCatalog, getTrendingAnime, getNewReleases } from '../services/contentService';
 import { Anime, ViewState, User, WatchOrderItem, ContentType } from '../types';
 import VideoPlayer from '../components/VideoPlayer';
 import AIAssistant from '../components/AIAssistant';
@@ -286,9 +286,11 @@ const AnimeCard: React.FC<{ anime: Anime; onClick: (a: Anime) => void }> = ({ an
     </div>
 );
 
-const HeroCarousel = ({ currentIndex, setCurrentIndex, handleAnimeClick }: any) => {
-    const heroItems = MOCK_ANIME_CATALOG.slice(0, 3);
-    const item = heroItems[currentIndex];
+const HeroCarousel = ({ items, currentIndex, setCurrentIndex, handleAnimeClick }: any) => {
+    const heroItems = items.slice(0, 5);
+    const item = heroItems[currentIndex] || heroItems[0];
+
+    if (!item) return null;
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -376,9 +378,21 @@ const HeroCarousel = ({ currentIndex, setCurrentIndex, handleAnimeClick }: any) 
     );
 };
 
-const HomeView = ({ currentHeroIndex, setCurrentHeroIndex, handleAnimeClick }: any) => (
+const HomeView = ({
+    trending,
+    newReleases,
+    topAiring,
+    currentHeroIndex,
+    setCurrentHeroIndex,
+    handleAnimeClick
+}: any) => (
     <div className="animate-fade-in pb-32">
-        <HeroCarousel currentIndex={currentHeroIndex} setCurrentIndex={setCurrentHeroIndex} handleAnimeClick={handleAnimeClick} />
+        <HeroCarousel
+            items={trending}
+            currentIndex={currentHeroIndex}
+            setCurrentIndex={setCurrentHeroIndex}
+            handleAnimeClick={handleAnimeClick}
+        />
 
         <div className="px-8 md:px-16 space-y-20 mt-16 relative">
             <section>
@@ -392,7 +406,7 @@ const HomeView = ({ currentHeroIndex, setCurrentHeroIndex, handleAnimeClick }: a
                     </button>
                 </div>
                 <div className="flex gap-8 overflow-x-auto pb-12 no-scrollbar snap-x perspective-container pl-4">
-                    {MOCK_ANIME_CATALOG.map(anime => (
+                    {trending.map((anime: Anime) => (
                         <div key={anime.id} className="min-w-[220px] md:min-w-[260px] snap-start">
                             <AnimeCard anime={anime} onClick={handleAnimeClick} />
                         </div>
@@ -408,7 +422,7 @@ const HomeView = ({ currentHeroIndex, setCurrentHeroIndex, handleAnimeClick }: a
                             <h2 className="text-3xl font-black text-white tracking-tighter italic">FRESH <span className="text-brand-orange">DROPS</span></h2>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
-                            {[...MOCK_ANIME_CATALOG, ...MOCK_ANIME_CATALOG].slice(0, 8).map((anime, idx) => (
+                            {newReleases.slice(0, 8).map((anime: Anime, idx: number) => (
                                 <AnimeCard key={`${anime.id}-${idx}`} anime={anime} onClick={handleAnimeClick} />
                             ))}
                         </div>
@@ -422,7 +436,7 @@ const HomeView = ({ currentHeroIndex, setCurrentHeroIndex, handleAnimeClick }: a
                             TOP AIRING
                         </h3>
                         <div className="space-y-6">
-                            {MOCK_ANIME_CATALOG.slice(0, 5).map((anime, idx) => (
+                            {topAiring.slice(0, 5).map((anime: Anime, idx: number) => (
                                 <div
                                     key={anime.id}
                                     onClick={() => handleAnimeClick(anime)}
@@ -578,6 +592,11 @@ const Dashboard = () => {
     const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
     const [currentWatchItem, setCurrentWatchItem] = useState<WatchOrderItem | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [catalog, setCatalog] = useState<Anime[]>([]);
+    const [trending, setTrending] = useState<Anime[]>([]);
+    const [newReleases, setNewReleases] = useState<Anime[]>([]);
+    const [isLoadingContent, setIsLoadingContent] = useState(true);
+
     const [searchResults, setSearchResults] = useState<Anime[]>([]);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -588,20 +607,41 @@ const Dashboard = () => {
 
     const handleLogout = async () => {
         await logout();
-        // Navigate removed as user is null now, UI updates automatically
+        // UI updates automatically
     };
+
+    useEffect(() => {
+        const loadContent = async () => {
+            setIsLoadingContent(true);
+            try {
+                const [catalogData, trendingData, newData] = await Promise.all([
+                    getAnimeCatalog(),
+                    getTrendingAnime(),
+                    getNewReleases()
+                ]);
+                setCatalog(catalogData);
+                setTrending(trendingData);
+                setNewReleases(newData);
+            } catch (error) {
+                console.error("Failed to load content:", error);
+            } finally {
+                setIsLoadingContent(false);
+            }
+        };
+        loadContent();
+    }, []);
 
     useEffect(() => {
         if (searchTerm.trim() === '') {
             setSearchResults([]);
             return;
         }
-        const results = MOCK_ANIME_CATALOG.filter(anime =>
+        const results = catalog.filter(anime =>
             anime.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             anime.japaneseTitle?.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setSearchResults(results);
-    }, [searchTerm]);
+    }, [searchTerm, catalog]);
 
     const handleAnimeClick = (anime: Anime) => {
         setSelectedAnime(anime);
@@ -664,6 +704,9 @@ const Dashboard = () => {
                 <main className="flex-1 overflow-y-auto scroll-smooth bg-[#020202] perspective-container">
                     {view === 'HOME' && (
                         <HomeView
+                            trending={trending}
+                            newReleases={newReleases}
+                            topAiring={catalog} // Using full catalog as top airing fallback for now
                             currentHeroIndex={currentHeroIndex}
                             setCurrentHeroIndex={setCurrentHeroIndex}
                             handleAnimeClick={handleAnimeClick}
@@ -696,7 +739,7 @@ const Dashboard = () => {
 
             {view !== 'WATCH' && (
                 <AIAssistant
-                    catalog={MOCK_ANIME_CATALOG}
+                    catalog={catalog}
                     currentAnime={selectedAnime || undefined}
                     isGuest={!user || user.isGuest}
                     onLoginRequest={() => navigate('/login')}
