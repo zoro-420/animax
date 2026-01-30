@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ScanFace, Command, User as UserIcon, Loader2, PlayCircle, Fingerprint, Lock } from 'lucide-react';
@@ -12,8 +12,20 @@ const SignUp = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signup } = useAuth();
+    const { signup, isAuthenticated, loading: authLoading } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            navigate('/', { replace: true });
+        }
+    }, [isAuthenticated, authLoading, navigate]);
+
+    // Show loading while checking auth state
+    if (authLoading) {
+        return <div className="min-h-screen flex items-center justify-center bg-black text-brand-green font-mono">INITIALIZING...</div>;
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ScanFace, Command, Loader2, Fingerprint } from 'lucide-react';
+import { ScanFace, Command, Loader2, Fingerprint, Lock } from 'lucide-react';
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, loginGuest } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -41,6 +41,18 @@ const SignIn = () => {
                     setError('Authentication failed');
             }
         } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGuestLogin = async () => {
+        setLoading(true);
+        try {
+            await loginGuest();
+            navigate('/');
+        } catch (err) {
+            console.error(err);
+            setError('Guest initialization failed');
             setLoading(false);
         }
     };
@@ -133,10 +145,21 @@ const SignIn = () => {
                         </div>
                     </form>
 
-                    <div className="flex justify-center items-center pt-4">
-                        <Link to="/signup" className="text-[10px] font-mono text-gray-500 hover:text-white transition-colors underline decoration-gray-800 hover:decoration-white">
-                            CREATE NEW IDENTITY
-                        </Link>
+                    <div className="pt-4 space-y-3">
+                        <div className="flex justify-between items-center gap-4">
+                            <button
+                                type="button"
+                                onClick={handleGuestLogin}
+                                disabled={loading}
+                                className="text-[10px] font-mono text-gray-600 hover:text-brand-green transition-colors flex items-center gap-1 border border-transparent hover:border-brand-green/30 px-3 py-2 rounded"
+                            >
+                                <Lock size={12} /> GUEST_ACCESS
+                            </button>
+
+                            <Link to="/signup" className="text-[10px] font-mono text-gray-500 hover:text-white transition-colors underline decoration-gray-800 hover:decoration-white">
+                                CREATE NEW IDENTITY
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,5 @@
-```typescript
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
+import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -40,34 +39,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        
-        if (firebaseUser.isAnonymous) {
-            // Create transient Guest User Data
+      try {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+
+          if (firebaseUser.isAnonymous) {
             setUserData({
+              id: firebaseUser.uid,
+              name: 'Guest User',
+              email: 'guest@animax.local',
+              avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + firebaseUser.uid,
+              isGuest: true,
+              watchlist: [],
+              history: []
+            });
+          } else {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+              if (userDoc.exists()) {
+                setUserData(userDoc.data() as User);
+              } else {
+                setUserData(null);
+              }
+            } catch (firestoreErr) {
+              console.error("Firestore access failed (likely permission issues):", firestoreErr);
+              // Fallback for when Firestore is down/blocked but Auth works
+              setUserData({
                 id: firebaseUser.uid,
-                name: 'Guest User',
-                email: 'guest@animax.local',
-                avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + firebaseUser.uid,
-                isGuest: true,
+                name: firebaseUser.displayName || 'Unknown User',
+                email: firebaseUser.email || '',
+                avatar: firebaseUser.photoURL || '',
+                isGuest: false,
                 watchlist: [],
                 history: []
-            });
-        } else {
-            // Fetch additional user data from Firestore for real users
-            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-            if (userDoc.exists()) {
-              setUserData(userDoc.data() as User);
-            } else {
-                 setUserData(null);
+              } as User);
             }
+          }
+        } else {
+          setUser(null);
+          setUserData(null);
         }
-      } else {
-        setUser(null);
-        setUserData(null);
+      } catch (err) {
+        console.error("Auth state handling error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -75,25 +91,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, additionalData: Partial<User>) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
-    
+
     const newUserData: User = {
-        id: uid,
-        email: email,
-        name: additionalData.name || 'Anonymous',
-        avatar: additionalData.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + uid,
-        isGuest: false,
-        watchlist: [],
-        history: [],
-        ...additionalData
+      id: uid,
+      email: email,
+      name: additionalData.name || 'Anonymous',
+      avatar: additionalData.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + uid,
+      isGuest: false,
+      watchlist: [],
+      history: [],
+      ...additionalData
     };
 
     // Create user document in Firestore
-    await setDoc(doc(db, 'users', uid), {
-      ...newUserData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    
+    // Create user document in Firestore
+    try {
+      await setDoc(doc(db, 'users', uid), {
+        ...newUserData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (firestoreError) {
+      console.error('Firestore error (non-blocking):', firestoreError);
+      // Don't throw - user is created in Auth, Firestore doc can be created later
+    }
+
     setUserData(newUserData);
     return userCredential;
   };
@@ -103,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const loginGuest = async () => {
-      return signInAnonymously(auth);
+    return signInAnonymously(auth);
   };
 
   const logout = async () => {
@@ -121,9 +143,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: !!user
   };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
